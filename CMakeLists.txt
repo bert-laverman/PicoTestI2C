@@ -18,7 +18,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 # Set CMake defines for the Raspberry Pi Pico and required components
 set(TARGET_PICO on)
 set(HAVE_I2C on)
-set(HAVE_SPI off)
+# With a MAX7219 8-digit display attached (SPI0: CS = GP17, SCK = GP18, MOSI = GP19), the bus controller can control it.
+option(WITH_MAX7219 "Control a MAX7219 display on SPI0 for the bus controller" OFF)
+if(WITH_MAX7219)
+  set(HAVE_SPI on)
+  set(HAVE_MAX7219 on)
+else()
+  set(HAVE_SPI off)
+endif()
 set(HAVE_LED on)
 set(HAVE_PWM off)
 

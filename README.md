@@ -17,6 +17,23 @@ cmake -S . -B build -G Ninja && cmake --build build
 
 or use `cppr-deploy PicoTestI2C` from the CppRaspberry tools, which also flashes it.
 
+## A MAX7219 display
+
+With `-DWITH_MAX7219=ON` the Pico also drives a MAX7219 8-digit display on SPI0 for the bus controller, using the
+`MAX7219Handler` of CppRaspberry. Wire it like this:
+
+| Display | Pico | Pin |
+|---|---|---|
+| `DIN` | GP19 (SPI0 TX) | 25 |
+| `CLK` | GP18 (SPI0 SCK) | 24 |
+| `CS` (or `LOAD`) | GP17 (SPI0 CSn) | 22 |
+| `GND` | GND | 23 |
+| `VCC` | VBUS (5 V) | 40 |
+
+At start-up all segments light up for 5 seconds, as a check of the wiring. After that the display shows the address of the
+board, until the bus controller sends something else. `Zero2WTestI2C` does that when you give it the address of the board
+with the display as second argument.
+
 ## Test builds
 
 These are meant for the bus tests in `CppRaspberry/tools/i2c-bus-tests`. Use a separate build directory for each, for

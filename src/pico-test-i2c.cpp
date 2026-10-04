@@ -29,6 +29,12 @@
 
 #include <components/local-led.hpp>
 
+#if defined(HAVE_MAX7219)
+#include <interfaces/pico-spi.hpp>
+#include <devices/local-max7219.hpp>
+#include <protocols/max7219-handler.hpp>
+#endif
+
 using namespace nl::rakis::raspberrypi;
 using nl::rakis::raspberrypi::components::Led;
 
@@ -108,6 +114,25 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] const char **argv)
 
     components::LocalLed internalLed(berry, PICO_DEFAULT_LED_PIN);
 
+#if defined(HAVE_MAX7219)
+    // A MAX7219 8-digit display on SPI0 (CS = GP17, SCK = GP18, MOSI = GP19), controlled by messages from the bus controller.
+    // Everything lights up for a few seconds, as a check of the wiring.
+    interfaces::PicoSPI spi;
+    spi.baudRate(500000);
+    devices::LocalMAX7219<interfaces::PicoSPI> max(spi);
+    max.numDevices(1);
+    max.reset();
+    printf("Display test on (5 s)\n");
+    max.displayTest(1);
+    berry.sleepMs(5000);
+    max.displayTest(0);
+    printf("Display test off\n");
+
+    protocols::MAX7219Handler<interfaces::PicoSPI> maxHandler(max);
+    maxHandler.registerAt(driver);
+    printf("MAX7219 ready\n");
+#endif
+
 #if defined(TEST_TRIGGER)
     gpio_init(TRIGGER_PIN);
     gpio_set_dir(TRIGGER_PIN, GPIO_IN);
@@ -138,6 +163,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] const char **argv)
         if (driver.listenAddress() != lastAddress) {
             lastAddress = driver.listenAddress();
             printf("Now listening on address 0x%02x\n", lastAddress);
+#if defined(HAVE_MAX7219)
+            max.setNumber(0, lastAddress);      // show our address, until the bus controller shows something else
+#endif
         }
 
 #if defined(TEST_TRIGGER)
